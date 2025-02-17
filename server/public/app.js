@@ -1,4 +1,21 @@
 // app.js
+document.getElementById("loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+  const response = await fetch("/index", {
+    method: "POST",
+    body: JSON.stringify(Object.fromEntries(formData)),
+    headers: { "Content-Type": "application/json" }
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    window.location.href = data.redirect; // Redirect on the client side
+  } else {
+    alert("Invalid username or password");
+  }
+});
 
 // Mocking smart device control for demonstration
 document.getElementById('ac-toggle').addEventListener('click', () => {

@@ -61,14 +61,14 @@ app.post('/index', (req, res) => {
 
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.user = user; // Save user in session
-    return res.redirect('/dashb'); // Redirect to home page (dashboard.html)
+    return res.json({ redirect: '/dashb' }); // Return JSON instead of direct redirect
   } else {
-    return res.status(401).send('Invalid credentials');
+    return res.status(401).json({ error: 'Invalid credentials' });
   }
 });
 
 // Logout route
-app.get('/index', (req, res) => {
+app.get('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/');
   });
