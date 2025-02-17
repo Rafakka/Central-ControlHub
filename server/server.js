@@ -48,7 +48,7 @@ function isAuthenticated(role) {
 app.get('/', (req, res) => {
   // If the user is authenticated (if there's a session), serve the dashboard page
   if (req.session.user) {
-    return res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+    return res.sendFile(path.join(__dirname, 'public', 'dashb.html'));
   }
   // If no session, show the login page
   return res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -61,7 +61,7 @@ app.post('/index', (req, res) => {
 
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.user = user; // Save user in session
-    return res.redirect('/dashboard'); // Redirect to home page (dashboard.html)
+    return res.redirect('/dashb'); // Redirect to home page (dashboard.html)
   } else {
     return res.status(401).send('Invalid credentials');
   }
@@ -97,8 +97,8 @@ app.post('/control/lamp', isAuthenticated('master'), (req, res) => {
 });
 
 // Serve the login page (simple login form)
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+app.get('/dashb', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashb.html'));
 });
 
 // Start the server
