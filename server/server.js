@@ -11,7 +11,6 @@ app.use(session({
   secret: 'secret-key',  // Replace with a secure key in production
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }  // Make sure it's not set to `true` in HTTP
 }));
 
 // Middleware for JSON parsing
@@ -55,28 +54,23 @@ app.get('/', (req, res) => {
   return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Login route (no changes needed)
-app.post('/dashboard', (req, res) => {
+// Login route
+app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
 
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.user = user; // Save user in session
-    console.log('User session:', req.session.user);  // Debugging: Log session user
     return res.redirect('/'); // Redirect to home page (dashboard.html)
   } else {
     return res.status(401).send('Invalid credentials');
   }
 });
 
-
 // Logout route
-app.get('/index', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).send('Could not log out');
-    }
-    res.redirect('/dashboard');
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/');
   });
 });
 
@@ -103,8 +97,8 @@ app.post('/control/lamp', isAuthenticated('master'), (req, res) => {
 });
 
 // Serve the login page (simple login form)
-app.get('/index', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Start the server
