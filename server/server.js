@@ -9,7 +9,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Set up a basic route to check if the server is working
 app.get('/', (req, res) => {
-  res.send('Welcome to the Central Control Hub');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start the server
