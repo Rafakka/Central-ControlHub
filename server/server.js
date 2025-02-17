@@ -11,6 +11,7 @@ app.use(session({
   secret: 'secret-key',  // Replace with a secure key in production
   resave: false,
   saveUninitialized: true,
+  cookie: { secure: false }  // Make sure it's not set to `true` in HTTP
 }));
 
 // Middleware for JSON parsing
@@ -44,25 +45,25 @@ function isAuthenticated(role) {
   };
 }
 
-// Serve the index page (check for session)
+// Serve the login page (it will now be 'index.html')
 app.get('/', (req, res) => {
-  // Check if the user is authenticated (if there's a session)
+  // If the user is authenticated (if there's a session), serve the dashboard page
   if (req.session.user) {
-    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    return res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
   }
-  // If no session, redirect to login
-  return res.redirect('/login');
+  // If no session, show the login page
+  return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
-// Login route
+// Login route (no changes needed)
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
 
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.user = user; // Save user in session
-    return res.redirect('/'); // Redirect to home page (index.html)
+    console.log('User session:', req.session.user);  // Debugging: Log session user
+    return res.redirect('/'); // Redirect to home page (dashboard.html)
   } else {
     return res.status(401).send('Invalid credentials');
   }
@@ -71,8 +72,11 @@ app.post('/login', (req, res) => {
 
 // Logout route
 app.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/');
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).send('Could not log out');
+    }
+    res.redirect('/dashboard');
   });
 });
 
