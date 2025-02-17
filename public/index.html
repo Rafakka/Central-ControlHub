@@ -4,9 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Central Control Hub</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Welcome to Your Central Control Hub</h1>
-  <p>This is a basic webpage running on a local Node.js server!</p>
+  <header>
+    <h1>Welcome to your Local Control Hub</h1>
+  </header>
+  
+  <section id="control-panel">
+    <h2>Control Smart Devices</h2>
+    <!-- Add your control buttons for things like AC, lights, etc. -->
+    <button id="ac-toggle">Turn AC On/Off</button>
+    <button id="lamp-toggle">Turn Lamp On/Off</button>
+  </section>
+
+  <section id="file-library">
+    <h2>Your Media Library</h2>
+    <div id="music-list">
+      <!-- Music files list will go here -->
+    </div>
+    <div id="video-list">
+      <!-- Video files list will go here -->
+    </div>
+  </section>
+
+  <section id="board">
+    <h2>Local Board</h2>
+    <div id="post-list">
+      <!-- Posts will appear here -->
+    </div>
+    <textarea id="new-post" placeholder="Post something..."></textarea>
+    <button id="submit-post">Submit</button>
+  </section>
+
+  <script src="app.js"></script>
 </body>
 </html>
