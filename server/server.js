@@ -4,6 +4,9 @@ const path = require('path');
 const app = express();
 const port = 3000;
 
+// Middleware for JSON parsing
+app.use(express.json());
+
 // Serve static files (HTML, CSS, JS, images, etc.) from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -12,15 +15,15 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Middleware for JSON parsing
-app.use(express.json());
-
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve files from the assets directory
+app.get('/files/:type/:filename', (req, res) => {
+  const { type, filename } = req.params;
+  const filePath = path.join(__dirname, 'assets', type, filename);
+  res.sendFile(filePath);
+});
 
 // Control routes (example for AC and Lamp)
 app.post('/control/ac', (req, res) => {
-  // Here, you'd actually send a command to your smart device (e.g., AC)
   const { action } = req.body;
   if (action === 'toggle') {
     res.json({ message: 'AC toggled successfully' });
@@ -28,7 +31,6 @@ app.post('/control/ac', (req, res) => {
 });
 
 app.post('/control/lamp', (req, res) => {
-  // Send command to toggle the lamp
   const { action } = req.body;
   if (action === 'toggle') {
     res.json({ message: 'Lamp toggled successfully' });
@@ -41,7 +43,6 @@ app.post('/board/post', (req, res) => {
   // Save post to a local store or file (for simplicity, we send back the same content)
   res.json({ content: content });
 });
-
 
 // Start the server
 app.listen(port, () => {
