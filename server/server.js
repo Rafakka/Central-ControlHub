@@ -55,20 +55,20 @@ app.get('/', (req, res) => {
 });
 
 // Login route
-app.post('/login', (req, res) => {
+app.post('/index', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
 
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.user = user; // Save user in session
-    return res.redirect('/'); // Redirect to home page (dashboard.html)
+    return res.redirect('/dashboard'); // Redirect to home page (dashboard.html)
   } else {
     return res.status(401).send('Invalid credentials');
   }
 });
 
 // Logout route
-app.get('/logout', (req, res) => {
+app.get('/index', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/');
   });
@@ -97,8 +97,8 @@ app.post('/control/lamp', isAuthenticated('master'), (req, res) => {
 });
 
 // Serve the login page (simple login form)
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // Start the server
