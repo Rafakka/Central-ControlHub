@@ -56,7 +56,7 @@ app.get('/', (req, res) => {
 });
 
 // Login route (no changes needed)
-app.post('/login', (req, res) => {
+app.post('/dashboard', (req, res) => {
   const { username, password } = req.body;
   const user = users[username];
 
@@ -71,7 +71,7 @@ app.post('/login', (req, res) => {
 
 
 // Logout route
-app.get('/logout', (req, res) => {
+app.get('/index', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).send('Could not log out');
@@ -103,8 +103,8 @@ app.post('/control/lamp', isAuthenticated('master'), (req, res) => {
 });
 
 // Serve the login page (simple login form)
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+app.get('/index', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start the server
