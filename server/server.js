@@ -1,47 +1,106 @@
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const port = 3000;
 
+// Set up session middleware for user authentication
+app.use(session({
+  secret: 'secret-key',  // Replace with a secure key in production
+  resave: false,
+  saveUninitialized: true,
+}));
+
 // Middleware for JSON parsing
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (HTML, CSS, JS, images, etc.) from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set up a basic route to check if the server is working
+// Dummy database to hold user data (you can use a real DB later)
+const users = {
+  master: {
+    username: 'master',
+    password: '$2a$10$wHXJlhtZ4U0LOiwKNu17M.J3/ZHgDfpvMKFqB9muhwVFSdMiDd2ha', // 'password123' hashed
+    role: 'master',
+  },
+  guest: {
+    username: 'guest',
+    password: '$2a$10$hC.IpG7TbcpZlSZCZ9dVSeLhUjLsR4C6vSyHDP.oDtXqXg/c7uDHC', // 'guestpassword' hashed
+    role: 'guest',
+  },
+};
+
+// Middleware to check if the user is authenticated and authorized
+function isAuthenticated(role) {
+  return (req, res, next) => {
+    if (req.session.user && req.session.user.role === role) {
+      return next();
+    }
+    return res.status(401).send('Unauthorized');
+  };
+}
+
+// Serve the index page (check for session)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Check if the user is authenticated (if there's a session)
+  if (req.session.user) {
+    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+  // If no session, redirect to login
+  return res.redirect('/login');
 });
 
-// Serve files from the assets directory
-app.get('/files/:type/:filename', (req, res) => {
-  const { type, filename } = req.params;
-  const filePath = path.join(__dirname, 'assets', type, filename);
-  res.sendFile(filePath);
+
+// Login route
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = users[username];
+
+  if (user && bcrypt.compareSync(password, user.password)) {
+    req.session.user = user; // Save user in session
+    return res.redirect('/'); // Redirect to home page (index.html)
+  } else {
+    return res.status(401).send('Invalid credentials');
+  }
 });
 
-// Control routes (example for AC and Lamp)
-app.post('/control/ac', (req, res) => {
+
+// Logout route
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/');
+  });
+});
+
+// Guestbook route (accessible by both master and guest)
+app.post('/board/post', isAuthenticated('guest'), (req, res) => {
+  const { content } = req.body;
+  // Save post to a local store or file (for simplicity, we send back the same content)
+  res.json({ content: content });
+});
+
+// Control routes (only accessible by the master)
+app.post('/control/ac', isAuthenticated('master'), (req, res) => {
   const { action } = req.body;
   if (action === 'toggle') {
     res.json({ message: 'AC toggled successfully' });
   }
 });
 
-app.post('/control/lamp', (req, res) => {
+app.post('/control/lamp', isAuthenticated('master'), (req, res) => {
   const { action } = req.body;
   if (action === 'toggle') {
     res.json({ message: 'Lamp toggled successfully' });
   }
 });
 
-// Local board post route
-app.post('/board/post', (req, res) => {
-  const { content } = req.body;
-  // Save post to a local store or file (for simplicity, we send back the same content)
-  res.json({ content: content });
+// Serve the login page (simple login form)
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Start the server
