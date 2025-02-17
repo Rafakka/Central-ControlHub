@@ -3,6 +3,7 @@ const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 
+const fs = require('fs');
 const app = express();
 const port = 3000;
 
@@ -104,4 +105,28 @@ app.get('/dashb', (req, res) => {
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
+});
+
+// Define media folders
+const musicFolder = path.join(__dirname, 'public', 'music');
+const videoFolder = path.join(__dirname, 'public', 'videos');
+
+// List music files
+app.get('/media/music', (req, res) => {
+  fs.readdir(musicFolder, (err, files) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to read music directory' });
+    }
+    res.json(files);
+  });
+});
+
+// List video files
+app.get('/media/videos', (req, res) => {
+  fs.readdir(videoFolder, (err, files) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to read video directory' });
+    }
+    res.json(files);
+  });
 });

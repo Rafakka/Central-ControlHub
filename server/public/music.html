@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Library</title>
+</head>
+<body>
+    <h1>Music Library</h1>
+    <button onclick="window.location.href='dashb.html'">Back to Dashboard</button>
+    <ul id="musicList"></ul>
+
+    <script>
+        fetch('/media/music')
+            .then(response => response.json())
+            .then(files => {
+                const list = document.getElementById('musicList');
+                files.forEach(file => {
+                    let listItem = document.createElement('li');
+                    listItem.innerHTML = `<a href="music/${file}" target="_blank">${file}</a> 
+                    <audio controls>
+                        <source src="music/${file}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>`;
+                    list.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error('Error fetching music files:', error));
+    </script>
+</body>
+</html>
