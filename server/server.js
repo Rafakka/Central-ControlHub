@@ -2,8 +2,11 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
-
 const fs = require('fs');
+
+// Require our database module
+const db = require('./db');
+
 const app = express();
 const port = 3000;
 
@@ -14,26 +17,12 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// Middleware for JSON parsing
+// Middleware for JSON parsing and URL encoding
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (HTML, CSS, JS, images, etc.) from the 'public' directory
+// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Dummy database to hold user data (you can use a real DB later)
-const users = {
-  master: {
-    username: 'master',
-    password: '$2a$10$wHXJlhtZ4U0LOiwKNu17M.J3/ZHgDfpvMKFqB9muhwVFSdMiDd2ha', // 'password123' hashed
-    role: 'master',
-  },
-  guest: {
-    username: 'guest',
-    password: '$2a$10$hC.IpG7TbcpZlSZCZ9dVSeLhUjLsR4C6vSyHDP.oDtXqXg/c7uDHC', // 'guestpassword' hashed
-    role: 'guest',
-  },
-};
 
 // Middleware to check if the user is authenticated and authorized
 function isAuthenticated(role) {
@@ -45,30 +34,38 @@ function isAuthenticated(role) {
   };
 }
 
-// Serve the login page (it will now be 'index.html')
+// Root route: If logged in, serve the dashboard page; otherwise, serve the login page
 app.get('/', (req, res) => {
-  // If the user is authenticated (if there's a session), serve the dashboard page
   if (req.session.user) {
     return res.sendFile(path.join(__dirname, 'public', 'dashb.html'));
   }
-  // If no session, show the login page
   return res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Login route
-app.post('/index', (req, res) => {
+// Login route (POST): Validate credentials and set session
+app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const user = users[username];
-
-  if (user && bcrypt.compareSync(password, user.password)) {
-    req.session.user = user; // Save user in session
-    return res.json({ redirect: '/dashb' }); // Return JSON instead of direct redirect
-  } else {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
+  // Query the database for the user
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
+    if (err) {
+      console.error('DB error:', err);
+      return res.status(500).send('Internal server error');
+    }
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    // Compare the provided password with the stored hash
+    const valid = bcrypt.compareSync(password, user.password);
+    if (valid) {
+      req.session.user = { id: user.id, username: user.username, role: user.role };
+      return res.redirect('/');
+    } else {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+  });
 });
 
-// Logout route
+// Logout route: Destroy the session and redirect to login
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
     res.redirect('/');
@@ -97,21 +94,20 @@ app.post('/control/lamp', isAuthenticated('master'), (req, res) => {
   }
 });
 
-// Serve the login page (simple login form)
+// Serve the dashboard page (optional route)
 app.get('/dashb', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashb.html'));
+  if (req.session.user) {
+    res.sendFile(path.join(__dirname, 'public', 'dashb.html'));
+  } else {
+    res.redirect('/');
+  }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
-
-// Define media folders
+// Define media folders (inside the public folder)
 const musicFolder = path.join(__dirname, 'public', 'music');
 const videoFolder = path.join(__dirname, 'public', 'videos');
 
-// List music files
+// Route to list music files
 app.get('/media/music', (req, res) => {
   fs.readdir(musicFolder, (err, files) => {
     if (err) {
@@ -121,7 +117,7 @@ app.get('/media/music', (req, res) => {
   });
 });
 
-// List video files
+// Route to list video files
 app.get('/media/videos', (req, res) => {
   fs.readdir(videoFolder, (err, files) => {
     if (err) {
@@ -129,4 +125,9 @@ app.get('/media/videos', (req, res) => {
     }
     res.json(files);
   });
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
