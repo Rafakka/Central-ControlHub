@@ -1,31 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Library</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Library</title>
+  <script>
+    async function loadMusic() {
+      const response = await fetch('/api/music');
+      const data = await response.json();
+
+      const localList = document.getElementById('local-music');
+      const externalList = document.getElementById('external-music');
+
+      localList.innerHTML = "<h3>Local Music</h3>";
+      externalList.innerHTML = "<h3>External Drive Music</h3>";
+
+      // Function to create audio elements
+      const addMusicItem = (list, url, name) => {
+        const item = document.createElement('div');
+        item.innerHTML = `<p>${name}</p><audio controls src="${url}"></audio>`;
+        list.appendChild(item);
+      };
+
+      // Add local files
+      data.local.forEach(file => addMusicItem(localList, file, file.split('/').pop()));
+
+      // Add external files
+      data.external.forEach(file => addMusicItem(externalList, file, file.split('/').pop()));
+    }
+
+    window.onload = loadMusic;
+  </script>
 </head>
 <body>
-    <h1>Music Library</h1>
-    <button onclick="window.location.href='dashb.html'">Back to Dashboard</button>
-    <ul id="musicList"></ul>
-
-    <script>
-        fetch('/media/music')
-            .then(response => response.json())
-            .then(files => {
-                const list = document.getElementById('musicList');
-                files.forEach(file => {
-                    let listItem = document.createElement('li');
-                    listItem.innerHTML = `<a href="music/${file}" target="_blank">${file}</a> 
-                    <audio controls>
-                        <source src="music/${file}" type="audio/mpeg">
-                        Your browser does not support the audio element.
-                    </audio>`;
-                    list.appendChild(listItem);
-                });
-            })
-            .catch(error => console.error('Error fetching music files:', error));
-    </script>
+  <h1>Music Library</h1>
+  <div id="local-music"></div>
+  <div id="external-music"></div>
 </body>
 </html>

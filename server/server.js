@@ -22,26 +22,44 @@ app.use(session({
 // Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
 
-const musicFolder = '/mnt/external_hd/music'; // Update this path
+/// Paths for both local and external music directories
+const localMusicFolder = path.join(__dirname, 'music');
+const externalMusicFolder = '/mnt/external_hd/music';
 
-// Serve static audio files
-app.use('/music', express.static(musicFolder));
+// Serve static files from public folder
+app.use(express.static('public'));
 
-// API route to list all music files
-app.get('/api/music', (req, res) => {
-  fs.readdir(musicFolder, (err, files) => {
-    if (err) {
-      console.error('Error reading music directory:', err);
-      return res.status(500).json({ error: 'Unable to read music directory' });
-    }
+// Serve music files from both locations
+app.use('/music/local', express.static(localMusicFolder));
+app.use('/music/external', express.static(externalMusicFolder));
 
-    // Filter for only audio files (MP3, WAV, OGG)
-    const audioFiles = files.filter(file => /\.(mp3|wav|ogg)$/i.test(file));
+// Function to list music files from a given directory
+const getMusicFiles = (dir) => {
+  return new Promise((resolve) => {
+    fs.readdir(dir, (err, files) => {
+      if (err) {
+        console.error(`Error reading directory ${dir}:`, err);
+        resolve([]); // Return an empty array if error occurs
+      } else {
+        // Filter only audio files
+        const audioFiles = files.filter(file => /\.(mp3|wav|ogg)$/i.test(file));
+        resolve(audioFiles);
+      }
+    });
+  });
+};
 
-    // Send file names as JSON
-    res.json(audioFiles);
+// API to get music from both locations
+app.get('/api/music', async (req, res) => {
+  const localFiles = await getMusicFiles(localMusicFolder);
+  const externalFiles = await getMusicFiles(externalMusicFolder);
+
+  res.json({
+    local: localFiles.map(file => `/music/local/${file}`),
+    external: externalFiles.map(file => `/music/external/${file}`)
   });
 });
+
 
 // Connect to SQLite
 const db = new sqlite3.Database('./database/users.db');
