@@ -3,7 +3,7 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
   event.preventDefault();
 
   const formData = new FormData(event.target);
-  const response = await fetch("/index", {
+  const response = await fetch("/login", {  // Change "/index" to "/login"
     method: "POST",
     body: JSON.stringify(Object.fromEntries(formData)),
     headers: { "Content-Type": "application/json" }
@@ -59,3 +59,22 @@ document.getElementById('ac-toggle').addEventListener('click', () => {
     }
   });
   
+ // Function to load posts from the server
+async function loadPosts() {
+  const response = await fetch('/board/posts');
+  if (response.ok) {
+    const posts = await response.json();
+    const postList = document.getElementById('post-list');
+    postList.innerHTML = ""; // Clear previous posts
+
+    posts.forEach(post => {
+      const postElement = document.createElement('p');
+      postElement.textContent = post.content;
+      postList.appendChild(postElement);
+    });
+  }
+}
+
+// Call loadPosts when the page loads
+document.addEventListener("DOMContentLoaded", loadPosts);
+ 
