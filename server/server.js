@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
@@ -20,6 +21,27 @@ app.use(session({
 
 // Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
+
+const musicFolder = '/mnt/external_hd/music'; // Update this path
+
+// Serve static audio files
+app.use('/music', express.static(musicFolder));
+
+// API route to list all music files
+app.get('/api/music', (req, res) => {
+  fs.readdir(musicFolder, (err, files) => {
+    if (err) {
+      console.error('Error reading music directory:', err);
+      return res.status(500).json({ error: 'Unable to read music directory' });
+    }
+
+    // Filter for only audio files (MP3, WAV, OGG)
+    const audioFiles = files.filter(file => /\.(mp3|wav|ogg)$/i.test(file));
+
+    // Send file names as JSON
+    res.json(audioFiles);
+  });
+});
 
 // Connect to SQLite
 const db = new sqlite3.Database('./database/users.db');
