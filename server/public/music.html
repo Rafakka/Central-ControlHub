@@ -7,13 +7,27 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Music Library</h1>
-  <input type="text" id="search-bar" placeholder="Search for a song...">
+  <div id="title-library">Music Library</div>
+  
+  <!-- Central Search Bar -->
+  <div id="search-container">
+    <input type="text" id="search-bar" placeholder="Search for a song...">
+  </div>
+
+  <!-- Container for Search Results -->
   <ul id="music-list">Loading...</ul>
-  <div id="local-music"></div>
-  <div id="external-music"></div>
-  <!-- Load music.js first, since search.js depends on it -->
+
+  <!-- Album Art Modal Overlay -->
+  <div id="album-art-overlay" class="hidden">
+    <div id="album-art-content">
+      <img id="album-art-img" src="" alt="Album Art">
+      <!-- Transparent bar overlay -->
+      <div id="transparency-bar"></div>
+    </div>
+  </div>
+
   <script src="js/music.js"></script>
   <script src="js/search.js"></script>
+  <script src="js/albumArt.js"></script>
 </body>
 </html>
